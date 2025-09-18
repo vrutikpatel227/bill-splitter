@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Bill Splitter</title>
+
+  <!-- Manifest (inline as Blob) -->
+  <link rel="manifest" id="manifest-placeholder">
+  <script>
+    const manifestData = {
+      "name": "Bill Splitter",
+      "short_name": "Splitter",
+      "start_url": ".",
+      "display": "standalone",
+      "background_color": "#121212",
+      "theme_color": "#121212",
+      "icons": [
+        {
+          "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAB1UlEQVR4nO2aS47DIBAFJ+gF7kXew0/gHgR0XsdosHObJQlYIoTzF8+Pp27lZt2fQvZqf7mRAgJCE6Zq6N7x0MIOv+qgv04sAnwKHr03zM4B2mF+u0qT4HvA2aEqABvAf9dCsVsU+gHXBJcjc/IF8h3oy3AC7wRmwGJAGdAZaAxMWgQ6Zn7ABeg4sSRcZQbTAFq1jskwEk4DSsA2Wbml4MA6kkcTigYiAtqS3L0D/6IQqXAVWl+wK9M+vT0WmufWgK+JejBq+yLzBIDGMCpjhwF6wZrbQoHYAazB/BEMyFwN9QICBVeAF6dSoR9VQwB7gOv2K9qngI9yAyDSKABhsAaF+gNH7gG04A8tuQ00o+8jIsbMNoAKddWnZGAZpFz9dox6BbYgCAtXmAyPoXJSawD2X7E8cBDtizD4DbEFoS1FtnKnWB+zjewfNaVsm0fDANApFZ7GV2yQJ5mHMPzLePbEPjRpgDejwv8/0DF0awf8ewR9O/0SGRCb0D82b0GsX6ykWgAAAABJRU5ErkJggg==",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    };
+    const blob = new Blob([JSON.stringify(manifestData)], {type: 'application/json'});
+    const manifestURL = URL.createObjectURL(blob);
+    document.getElementById('manifest-placeholder').setAttribute('href', manifestURL);
+  </script>
+
+  <!-- Styles -->
+  <style>
+    body{
+      margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+      background:#121212;color:#f1f1f1;padding:24px;font-family:system-ui,Arial,sans-serif;
+    }
+    .card{width:100%;max-width:520px;background:#1e1e1e;border-radius:12px;
+      box-shadow:0 8px 30px rgba(0,0,0,0.5);padding:28px;}
+    header{display:flex;align-items:center;gap:12px;margin-bottom:18px;}
+    .logo{width:48px;height:48px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+      background:linear-gradient(135deg,#4f46e5,#0ea5e9);color:white;font-weight:700;font-size:20px;}
+    h1{margin:0;font-size:20px;}
+    p.lead{margin:6px 0 0 0;color:#aaa;font-size:13px;}
+    form{display:grid;gap:12px;margin-top:12px;}
+    label{font-size:13px;margin-bottom:6px;display:block;}
+    input[type="number"]{
+      width:100%;padding:10px 12px;border-radius:8px;border:1px solid #444;
+      font-size:15px;outline:none;background:#2a2a2a;color:#fff;
+    }
+    input[type="number"]:focus{border-color:#4f46e5;box-shadow:0 0 8px #4f46e566;}
+    .row{display:flex;gap:12px;}
+    .row .col{flex:1}
+    .actions{display:flex;gap:8px;margin-top:6px;}
+    button{padding:10px 14px;border-radius:10px;border:0;font-weight:600;cursor:pointer;}
+    .btn-primary{background:#4f46e5;color:white;}
+    .btn-ghost{background:transparent;border:1px solid #555;color:#eee;}
+    .result{margin-top:14px;padding:14px;border-radius:10px;background:#2a2a2a;
+      border:1px solid #333;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+    .result .left{font-size:14px;}
+    .result .amount{font-size:20px;font-weight:700;color:#4f9ef5;}
+    .note{font-size:13px;color:#aaa;margin-top:8px;}
+    .error{color:#ef4444;font-size:13px;margin-top:6px}
+    .success{color:#10b981;font-size:13px;margin-top:6px}
+    footer{margin-top:14px;font-size:12px;color:#aaa;text-align:center}
+  </style>
+</head>
+<body>
+
+  <div class="card" role="main" aria-labelledby="title">
+    <header>
+      <div class="logo">₹</div>
+      <div>
+        <h1 id="title">Bill Splitter</h1>
+        <p class="lead">Divide a bill quickly — enter total and number of people.</p>
+      </div>
+    </header>
+
+    <form id="splitForm" onsubmit="return false;">
+      <div>
+        <label for="total">Total bill amount (₹)</label>
+        <input id="total" type="number" min="0" step="0.01" placeholder="e.g. 1200.50" required oninput="this.value=this.value.replace(/[^0-9.]/g,'')" />
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <label for="people">Number of people</label>
+          <input id="people" type="number" min="1" step="1" placeholder="e.g. 4" required oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
+        </div>
+        <div class="col">
+          <label for="tip">Tip per person (optional, ₹)</label>
+          <input id="tip" type="number" min="0" step="0.01" placeholder="e.g. 20" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" />
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="calcBtn" class="btn-primary">Split Bill</button>
+        <button id="resetBtn" class="btn-ghost" type="button">Reset</button>
+      </div>
+
+      <div id="msg" role="status" aria-live="polite"></div>
+
+      <div id="resultArea" style="display:none;" class="result" aria-hidden="true">
+        <div class="left">
+          <div>Each person pays</div>
+          <div class="note" id="breakdown"></div>
+        </div>
+        <div class="amount" id="amount">₹ 0.00</div>
+      </div>
+
+      <div class="note">Tip field is optional — the tip value you enter will be added per person.</div>
+    </form>
+
+    <footer>Thank you for using the Bill Splitter! 👋</footer>
+  </div>
+
+  <!-- Logic + Service Worker -->
+  <script>
+    const totalEl = document.getElementById('total');
+    const peopleEl = document.getElementById('people');
+    const tipEl = document.getElementById('tip');
+    const calcBtn = document.getElementById('calcBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const msg = document.getElementById('msg');
+    const resultArea = document.getElementById('resultArea');
+    const amountEl = document.getElementById('amount');
+    const breakdownEl = document.getElementById('breakdown');
+
+    function showMessage(text, type = '') {
+      msg.textContent = text;
+      msg.className = type === 'error' ? 'error' : (type === 'success' ? 'success' : '');
+    }
+
+    function formatCurrency(num) {
+      return '₹ ' + Number(num).toFixed(2);
+    }
+
+    calcBtn.addEventListener('click', () => {
+      showMessage('');
+      resultArea.style.display = 'none';
+      resultArea.setAttribute('aria-hidden', 'true');
+
+      const total = parseFloat(totalEl.value);
+      const people = parseInt(peopleEl.value, 10);
+      const tip = parseFloat(tipEl.value) || 0;
+
+      if (isNaN(total) || total < 0) {
+        showMessage('Please enter a valid total bill amount.', 'error');
+        return;
+      }
+      if (isNaN(people) || people <= 0) {
+        showMessage('Number of people must be at least 1.', 'error');
+        return;
+      }
+      if (tip < 0) {
+        showMessage('Tip cannot be negative.', 'error');
+        return;
+      }
+
+      const totalTip = tip * people;
+      const grandTotal = total + totalTip;
+      const each = grandTotal / people;
+
+      amountEl.textContent = formatCurrency(each);
+      breakdownEl.textContent = `Bill: ${formatCurrency(total)} · Tip total: ${formatCurrency(totalTip)} · People: ${people}`;
+      resultArea.style.display = 'flex';
+      resultArea.setAttribute('aria-hidden', 'false');
+
+      showMessage('Split calculated successfully!', 'success');
+    });
+
+    resetBtn.addEventListener('click', () => {
+      totalEl.value = '';
+      peopleEl.value = '';
+      tipEl.value = '';
+      msg.textContent = '';
+      resultArea.style.display = 'none';
+      resultArea.setAttribute('aria-hidden', 'true');
+    });
+
+    // Service Worker inline
+    if ('serviceWorker' in navigator) {
+      const swCode = `
+        const CACHE_NAME = "bill-splitter-cache-v1";
+        const urlsToCache = ["./"];
+        self.addEventListener("install", e=>{
+          e.waitUntil(caches.open(CACHE_NAME).then(c=>c.addAll(urlsToCache)));
+        });
+        self.addEventListener("fetch", e=>{
+          e.respondWith(caches.match(e.request).then(r=>r || fetch(e.request)));
+        });
+      `;
+      const blob = new Blob([swCode], { type: 'application/javascript' });
+      const swURL = URL.createObjectURL(blob);
+      navigator.serviceWorker.register(swURL);
+    }
+  </script>
+</body>
+</html>
